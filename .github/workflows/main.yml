@@ -1,55 +1,52 @@
-name: xserver Auto Renew
+name: 🪄 XServer自动签到
 
 on:
   schedule:
-    - cron: "12 10 * * *"   # 每天 UTC 10:12（北京时间 18:12）
+    - cron: "33 1 * * *"   # 每天 UTC 01:33（北京时间 09:33）
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
-  renew:
+  run:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
 
     steps:
-      - name: 📥 Checkout repo
+      - name: 检出仓库
         uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python
+      - name: 设置 Python 环境
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: '3.11'
 
-      - name: 📦 Install dependencies
+      - name: 缓存依赖
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: 安装依赖
         run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb
-          pip install --upgrade pip
           pip install -r requirements.txt
-          # Install Playwright and required browsers
-          pip install playwright
-          playwright install
+          python -m playwright install chromium
 
-      - name: 🚀 Run renew script
+      - name: 🎲 定时任务基础上随机延迟（0-119秒）
+        run: |
+          delay=$((RANDOM % 120))
+          echo "Random delay: ${delay}s"
+          sleep $delay
+
+      - name: 运行脚本
         env:
           XSERVER_EMAIL: ${{ secrets.XSERVER_EMAIL }}
           XSERVER_PASSWORD: ${{ secrets.XSERVER_PASSWORD }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           PROXY_SERVER: ${{ secrets.PROXY_SERVER }}
-        run: |
-          python renew.py
-
-      # 📸 上传截图（无论成功或失败）
-      - name: 📸 Upload debug screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: op-renew-screenshots
-          path: |
-            screenshots/*.png
+        run: python renew.py
 
       # ⏱️ 提交 time.txt 到仓库(用于解决60天无文件变化的限制)
       - name: Commit time.txt to repo
