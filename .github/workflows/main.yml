@@ -34,8 +34,6 @@ jobs:
 
       - name: 🚀 Run renew script
         env:
-          GITHUB_ACTIONS: ${{ secrets.GITHUB_ACTIONS }}
-          USE_HEADLESS: ${{ secrets.USE_HEADLESS }}
           XSERVER_EMAIL: ${{ secrets.XSERVER_EMAIL }}
           XSERVER_PASSWORD: ${{ secrets.XSERVER_PASSWORD }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
